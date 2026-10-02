@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Member Area | Samathakshara Jyothi Seva Samithi</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root{--orange:#e67e22;--navy:#243447;--cream:#fffaf3;--muted:#667085;--line:#e5e7eb;--green:#198754}
+    *{box-sizing:border-box} body{margin:0;font-family:Arial,sans-serif;background:var(--cream);color:var(--navy)}
+    .top{background:var(--navy);color:white;padding:18px 6%;display:flex;justify-content:space-between;align-items:center;gap:20px}
+    .brand{font-weight:700;font-size:18px}.brand small{display:block;font-size:11px;letter-spacing:2px;opacity:.75;margin-top:3px}
+    .container{max-width:1100px;margin:0 auto;padding:35px 20px}.card{background:white;border:1px solid var(--line);border-radius:14px;padding:24px;box-shadow:0 5px 18px rgba(0,0,0,.05);margin-bottom:22px}
+    h1,h2{margin-top:0}.muted{color:var(--muted)} label{font-weight:600;display:block;margin:12px 0 6px}
+    input,textarea,select{width:100%;padding:12px;border:1px solid #ccd2d8;border-radius:8px;font:inherit}
+    textarea{min-height:90px;resize:vertical}.btn{border:0;border-radius:8px;padding:11px 17px;background:var(--orange);color:white;font-weight:700;cursor:pointer}
+    .btn.secondary{background:var(--navy)}.btn.danger{background:#b42318}.row{display:grid;grid-template-columns:1fr 1fr;gap:18px}.full{grid-column:1/-1}
+    .hidden{display:none!important}.message{margin-top:12px;padding:10px;border-radius:8px;background:#eef7f1}.error{background:#fff0f0;color:#b42318}
+    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.tile{padding:20px;border:1px solid var(--line);border-radius:12px;background:#fff}
+    .list{padding:0;margin:0;list-style:none}.list li{border-top:1px solid var(--line);padding:14px 0}
+    .tag{display:inline-block;padding:4px 8px;border-radius:20px;background:#f1f3f5;font-size:12px;margin-left:6px}
+    @media(max-width:760px){.row,.grid{grid-template-columns:1fr}.top{align-items:flex-start;flex-direction:column}}
+  </style>
+</head>
+<body>
+<header class="top">
+  <div class="brand">☀ Samathakshara Jyothi<small>SEVA SAMITHI</small></div>
+  <button id="logoutBtn" class="btn secondary hidden">Logout</button>
+</header>
+
+<main class="container">
+  <section id="loginCard" class="card">
+    <h1>Member Login</h1>
+    <p class="muted">Only authorized organization members can access uploads and meeting management.</p>
+    <label for="email">Email</label>
+    <input id="email" type="email" autocomplete="email" required>
+    <label for="password">Password</label>
+    <input id="password" type="password" autocomplete="current-password" required>
+    <br><br>
+    <button id="loginBtn" class="btn">Login</button>
+    <div id="loginMsg"></div>
+  </section>
+
+  <section id="dashboard" class="hidden">
+    <div class="card">
+      <h1>Member Dashboard</h1>
+      <p id="welcome" class="muted"></p>
+    </div>
+
+    <div class="grid">
+      <div class="tile">
+        <h2>📸 Photos</h2>
+        <p class="muted">Upload JPG, PNG or WebP photos.</p>
+        <input id="photoFile" type="file" accept="image/jpeg,image/png,image/webp">
+        <label for="photoTitle">Title</label>
+        <input id="photoTitle" placeholder="Activity photo">
+        <br><br><button id="uploadPhotoBtn" class="btn">Upload Photo</button>
+        <div id="photoMsg"></div>
+      </div>
+
+      <div class="tile">
+        <h2>🎥 Videos</h2>
+        <p class="muted">Upload MP4, WebM or MOV videos.</p>
+        <input id="videoFile" type="file" accept="video/mp4,video/webm,video/quicktime">
+        <label for="videoTitle">Title</label>
+        <input id="videoTitle" placeholder="Activity video">
+        <br><br><button id="uploadVideoBtn" class="btn">Upload Video</button>
+        <div id="videoMsg"></div>
+      </div>
+
+      <div class="tile">
+        <h2>📄 Documents</h2>
+        <p class="muted">Upload PDF proformas and reports.</p>
+        <input id="docFile" type="file" accept="application/pdf">
+        <label for="docTitle">Title</label>
+        <input id="docTitle" placeholder="Meeting proforma">
+        <br><br><button id="uploadDocBtn" class="btn">Upload PDF</button>
+        <div id="docMsg"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>📅 Schedule a Meeting</h2>
+      <div class="row">
+        <div>
+          <label for="meetingTitle">Meeting title</label>
+          <input id="meetingTitle" placeholder="Monthly Samithi Meeting">
+        </div>
+        <div>
+          <label for="meetingDate">Date</label>
+          <input id="meetingDate" type="date">
+        </div>
+        <div>
+          <label for="meetingTime">Time</label>
+          <input id="meetingTime" type="time">
+        </div>
+        <div>
+          <label for="meetingLocation">Location</label>
+          <input id="meetingLocation" placeholder="Samithi office / online">
+        </div>
+        <div class="full">
+          <label for="meetingDescription">Description / agenda</label>
+          <textarea id="meetingDescription" placeholder="Meeting agenda..."></textarea>
+        </div>
+      </div>
+      <br><button id="meetingBtn" class="btn">Schedule Meeting</button>
+      <div id="meetingMsg"></div>
+    </div>
+
+    <div class="card">
+      <h2>Upcoming Meetings</h2>
+      <ul id="meetingList" class="list"><li class="muted">Loading...</li></ul>
+    </div>
+
+    <div class="card">
+      <h2>My Uploads</h2>
+      <ul id="uploadList" class="list"><li class="muted">Loading...</li></ul>
+    </div>
+  </section>
+</main>
+
+<script>
+const SUPABASE_URL = "https://mmmjybrwhxukqgzgiwki.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_0afC88h_ETlQuQWNRLV8nA_cpmfW6td";
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
+const $ = id => document.getElementById(id);
+function msg(id, text, error=false){ const el=$(id); el.textContent=text; el.className=error?"message error":"message"; }
+
+async function showSession(){
+  const {data:{session}} = await db.auth.getSession();
+  if(session){ showDashboard(session); } else { $("loginCard").classList.remove("hidden"); $("dashboard").classList.add("hidden"); $("logoutBtn").classList.add("hidden"); }
+}
+async function showDashboard(session){
+  $("loginCard").classList.add("hidden"); $("dashboard").classList.remove("hidden"); $("logoutBtn").classList.remove("hidden");
+  $("welcome").textContent = "Signed in as " + (session.user.email || "member");
+  loadMeetings(); loadUploads();
+}
+$("loginBtn").onclick = async ()=>{
+  msg("loginMsg","Logging in...");
+  const {data,error} = await db.auth.signInWithPassword({email:$("email").value.trim(),password:$("password").value});
+  if(error){msg("loginMsg",error.message,true);return}
+  msg("loginMsg","Login successful.");
+  showDashboard(data.session);
+};
+$("logoutBtn").onclick = async ()=>{await db.auth.signOut();location.reload()};
+
+async function upload(bucket,file,title,msgId){
+  if(!file){msg(msgId,"Choose a file first.",true);return}
+  if(!title.trim()){msg(msgId,"Enter a title first.",true);return}
+  const {data:{user}} = await db.auth.getUser();
+  if(!user){msg(msgId,"Please log in again.",true);return}
+  const safeName=file.name.replace(/[^a-zA-Z0-9._-]/g,"_");
+  const path=user.id+"/"+Date.now()+"_"+safeName;
+  msg(msgId,"Uploading...");
+  const {error:uploadError}=await db.storage.from(bucket).upload(path,file,{upsert:false});
+  if(uploadError){msg(msgId,uploadError.message,true);return}
+  const {error:rowError}=await db.from(bucket==="documents"?"documents":"media").insert(
+    bucket==="documents"
+      ? {title:title.trim(),file_path:path,is_public:false,uploaded_by:user.id}
+      : {title:title.trim(),bucket_name:bucket,file_path:path,is_public:false,uploaded_by:user.id}
+  );
+  if(rowError){msg(msgId,rowError.message,true);return}
+  msg(msgId,"Upload successful.");
+  loadUploads();
+}
+
+$("uploadPhotoBtn").onclick=()=>upload("photos",$("photoFile").files[0],$("photoTitle").value,"photoMsg");
+$("uploadVideoBtn").onclick=()=>upload("videos",$("videoFile").files[0],$("videoTitle").value,"videoMsg");
+$("uploadDocBtn").onclick=()=>upload("documents",$("docFile").files[0],$("docTitle").value,"docMsg");
+
+$("meetingBtn").onclick=async()=>{
+  const {data:{user}}=await db.auth.getUser();
+  if(!user){msg("meetingMsg","Please log in again.",true);return}
+  if(!$("meetingTitle").value.trim()||!$("meetingDate").value){msg("meetingMsg","Meeting title and date are required.",true);return}
+  const {error}=await db.from("meetings").insert({
+    title:$("meetingTitle").value.trim(),
+    description:$("meetingDescription").value.trim(),
+    meeting_date:$("meetingDate").value,
+    meeting_time:$("meetingTime").value||null,
+    location:$("meetingLocation").value.trim(),
+    created_by:user.id
+  });
+  if(error){msg("meetingMsg",error.message,true);return}
+  msg("meetingMsg","Meeting scheduled successfully.");
+  loadMeetings();
+};
+
+async function loadMeetings(){
+  const {data,error}=await db.from("meetings").select("*").order("meeting_date",{ascending:true});
+  const list=$("meetingList"); list.innerHTML="";
+  if(error){list.innerHTML="<li>"+error.message+"</li>";return}
+  if(!data.length){list.innerHTML='<li class="muted">No meetings scheduled yet.</li>';return}
+  data.forEach(m=>{
+    const li=document.createElement("li");
+    li.innerHTML="<strong>"+escapeHtml(m.title)+"</strong><span class='tag'>"+escapeHtml(m.meeting_date)+"</span>"+
+      (m.meeting_time?"<div>"+escapeHtml(m.meeting_time)+"</div>":"")+
+      (m.location?"<div class='muted'>"+escapeHtml(m.location)+"</div>":"")+
+      (m.description?"<div>"+escapeHtml(m.description)+"</div>":"");
+    list.appendChild(li);
+  });
+}
+async function loadUploads(){
+  const {data:{user}}=await db.auth.getUser(); if(!user)return;
+  const [media,docs]=await Promise.all([
+    db.from("media").select("title,bucket_name,file_path,created_at").eq("uploaded_by",user.id).order("created_at",{ascending:false}),
+    db.from("documents").select("title,file_path,created_at").eq("uploaded_by",user.id).order("created_at",{ascending:false})
+  ]);
+  const list=$("uploadList"); list.innerHTML="";
+  const items=[];
+  (media.data||[]).forEach(x=>items.push({title:x.title,type:x.bucket_name,path:x.file_path,date:x.created_at}));
+  (docs.data||[]).forEach(x=>items.push({title:x.title,type:"document",path:x.file_path,date:x.created_at}));
+  if(!items.length){list.innerHTML='<li class="muted">No uploads yet.</li>';return}
+  items.forEach(x=>{
+    const li=document.createElement("li");
+    li.innerHTML="<strong>"+escapeHtml(x.title)+"</strong> <span class='tag'>"+escapeHtml(x.type)+"</span><div class='muted'>"+new Date(x.date).toLocaleString()+"</div>";
+    list.appendChild(li);
+  });
+}
+function escapeHtml(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
+db.auth.onAuthStateChange((_event,session)=>{if(session)showDashboard(session)});
+showSession();
+</script>
+</body>
+</html>
